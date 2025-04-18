@@ -11,7 +11,8 @@
 [Tutorial 1 code -](lab/week05/QuickstartHarmann.html)
 [Tutorial 2 code -](lab/week05/MobileExampleHarmann.html)
 [Tutorial 3 code -](lab/week05/MarkersExampleHarmann.html)
-[First Web map code -](lab/week05/HarmannFirstWebMap.html)
+[First Web map code -](GEOG-HarmannMallory-GEOG678/lab/week05/HarmannFirstWebMap.html)
+
 
 
 
