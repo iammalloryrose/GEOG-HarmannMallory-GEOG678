@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mallory Harmann's First Web Map</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+    
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+    <script>
+        // Initialize the map
+        var map = L.map('map').fitWorld();
+        
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+        
+        // TAMU landmarks coordinates
+        var kyleField = [30.6084, -96.3402];
+        var omBuilding = [30.6179, -96.3386];
+        var academicBuilding = [30.6159, -96.3413];
+        
+        // Try to locate the user
+        map.locate({setView: true, maxZoom: 16});
+        
+        // Location found event handler
+        function onLocationFound(e) {
+            var radius = e.accuracy / 2;
+            L.marker(e.latlng).addTo(map)
+                .bindPopup("You are within " + radius + " meters from this point").openPopup();
+            L.circle(e.latlng, radius).addTo(map);
+        }
+        
+        // Location error event handler
+        function onLocationError(e) {
+            // If geolocation fails, center on Kyle Field
+            map.setView(kyleField, 15);
+            alert("Location access was denied or unavailable. Map centered on Kyle Field.");
+        }
+        // 1. Draw a circle around Kyle Field with popup
+        L.circle(kyleField, {
+            color: 'blue',
+            fillColor: '#30f',
+            fillOpacity: 0.3,
+            radius: 100
+        }).addTo(map).bindPopup("Kyle Field");
+
+        // 2. Create custom icons
+        var customIcon = L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
+            iconSize: [30, 30],
+            iconAnchor: [15, 30],
+            popupAnchor: [0, -30]
+        });
+
+        // 3. Add markers with custom icons and popups
+        L.marker(omBuilding, {icon: customIcon}).addTo(map)
+            .bindPopup("O&M Building");
+        L.marker(academicBuilding, {icon: customIcon}).addTo(map)
+            .bindPopup("Academic Building");
+
+        // 4. Create click event to show coordinates
+        map.on('click', function(e) {
+            L.popup()
+                .setLatLng(e.latlng)
+                .setContent("You clicked the map at " + e.latlng.toString())
+                .openOn(map);
+        });
+
+        map.on('locationfound', onLocationFound);
+        map.on('locationerror', onLocationError);
+    </script>
+</body>
+</html>
