@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Harmann TAMU Campus Map</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  
+  <style>
+    #map {
+      height: 100vh;
+    }
+    .info {
+      padding: 6px 8px;
+      background: white;
+      background: rgba(255,255,255,0.8);
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      border-radius: 5px;
+    }
+    .info h4 {
+      margin: 0 0 5px;
+      color: #800000; 
+    }
+  </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="tamubuildings.js"></script>
+
+<script>
+  //Initialize map centered on TAMU
+  var map = L.map('map').setView([30.6150, -96.3410], 16);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  // Create an info control
+  var info = L.control();
+
+  info.onAdd = function (map) {
+    this._div = L.DomUtil.create('div', 'info');
+    this.update();
+    return this._div;
+  };
+
+  // Update function using BldgAbbr and BldgName
+  info.update = function (props) {
+    this._div.innerHTML = '<h4>TAMU Building Info</h4>' + (props ?
+      '<b>' + props.BldgName + '</b><br />' + props.BldgAbbr
+      : 'Hover over a building');
+  };
+
+  info.addTo(map);
+
+  // Style for buildings
+  function buildingStyle(feature) {
+    return {
+      fillColor: "#500000",
+      weight: 2,
+      opacity: 1,
+      color: 'white',
+      dashArray: '3',
+      fillOpacity: 0.7
+    };
+  }
+
+  //Highlight feature on hover
+  function highlightFeature(e) {
+    var layer = e.target;
+
+    layer.setStyle({
+      weight: 3,
+      color: '#667',
+      dashArray: '',
+      fillOpacity: 0.9
+    });
+
+    if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+      layer.bringToFront();
+    }
+
+    // Update the info control with building details
+    info.update(layer.feature.properties);
+  }
+
+  // Reset highlight
+  function resetHighlight(e) {
+    geojson.resetStyle(e.target);
+    info.update();
+  }
+
+  // Zoom to feature on click
+  function zoomToFeature(e) {
+    map.fitBounds(e.target.getBounds());
+  }
+
+  // Define events for each feature
+  function onEachFeature(feature, layer) {
+    layer.on({
+      mouseover: highlightFeature,
+      mouseout: resetHighlight,
+      click: zoomToFeature
+    });
+  }
+
+  // Add GeoJSON directly from `tamu`
+  var geojson = L.geoJson(tamu, {
+    style: buildingStyle,
+    onEachFeature: onEachFeature
+  }).addTo(map);
+
+</script>
+
+</body>
+</html>

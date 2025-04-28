@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaflet GeoJSON Example Harmann</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+    <style>
+        #map {
+            height: 100vh; 
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="map"></div>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <script>
+        // Initialize the map
+        var map = L.map('map').setView([39.75, -104.99], 13);
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Define a custom icon
+        var redIcon = L.icon({
+            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-red.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41], 
+            popupAnchor: [1, -34], 
+            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+            shadowSize: [41, 41]
+        });
+
+        // Example 1: Points
+        var someFeatures = [
+            {
+                "type": "Feature",
+                "properties": {
+                    "name": "Coors Field",
+                    "show_on_map": true
+                },
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [-104.99404, 39.75621]
+                }
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "name": "Busch Field",
+                    "show_on_map": false
+                },
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [-104.98404, 39.74621]
+                }
+            }
+        ];
+
+        // Add only features with show_on_map = true
+		L.geoJSON(someFeatures, {
+            filter: function(feature, layer) {
+                return feature.properties.show_on_map;
+            },
+            onEachFeature: function (feature, layer) {
+                if (feature.properties && feature.properties.name) {
+                    layer.bindPopup(feature.properties.name);
+                }
+            }
+        }).addTo(map);
+
+        // Example 2: Line (Polyline)
+        var latlngs = [
+            [39.75621, -104.99404],
+            [39.74621, -104.98404]
+        ];
+
+        var polyline = L.polyline(latlngs, {color: 'blue'}).addTo(map);
+        polyline.bindPopup('Line between Coors Field and Busch Field');
+
+        // Example 3: Feature (Polygon)
+        var polygon = L.polygon([
+            [39.75421, -104.99004],
+            [39.75221, -104.99004],
+            [39.75221, -104.98604],
+            [39.75421, -104.98604]
+        ], {
+            color: 'blue',
+            fillOpacity: 0.5
+        }).addTo(map);
+        polygon.bindPopup('Polygon');
+    </script>
+
+</body>
+</html>
