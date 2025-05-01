@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>D3 Line Chart</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+    }
+    svg {
+      display: block;
+      margin: auto;
+    }
+    .label {
+      font-size: 12px;
+      fill: #333;
+    }
+    .legend text {
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div id="chart"></div>
+  <script>
+    const data = [
+      { day: "Sat", date: "2024-04-27", high: 82, low: 67 },
+      { day: "Sun", date: "2024-04-28", high: 81, low: 59 },
+      { day: "Mon", date: "2024-04-29", high: 81, low: 50 },
+      { day: "Tue", date: "2024-04-30", high: 70, low: 47 },
+      { day: "Wed", date: "2024-05-01", high: 77, low: 51 },
+      { day: "Thu", date: "2024-05-02", high: 78, low: 60 },
+      { day: "Fri", date: "2024-05-03", high: 79, low: 66 },
+      { day: "Sat", date: "2024-05-04", high: 80, low: 66 }
+    ];
+
+    data.forEach(d => {
+      d.dateObj = new Date(d.date);
+    });
+
+    const width = 960;
+    const height = 550;
+    const marginTop = 20;
+    const marginRight = 100;
+    const marginBottom = 100;
+    const marginLeft = 80;
+
+    // X scale with buffer on the right for centering
+    const dateExtent = d3.extent(data, d => d.dateObj);
+    const lastDelta = data[data.length - 1].dateObj - data[data.length - 2].dateObj;
+    const x = d3.scaleTime()
+      .domain([
+        new Date(dateExtent[0].getTime() - lastDelta / 2),
+        new Date(dateExtent[1].getTime() + lastDelta / 2)
+      ])
+      .range([marginLeft, width - marginRight]);
+
+    const y = d3.scaleLinear()
+      .domain([
+        d3.min(data, d => d.low) - 5,
+        d3.max(data, d => d.high) + 5
+      ])
+      .nice()
+      .range([height - marginBottom, marginTop]);
+
+    const svg = d3.create("svg")
+      .attr("width", width)
+      .attr("height", height)
+      .attr("viewBox", [0, 0, width, height])
+      .attr("style", "max-width: 100%; height: auto;");
+
+    // X-axis
+    svg.append("g")
+      .attr("transform", `translate(0,${height - marginBottom})`)
+      .call(d3.axisBottom(x)
+        .ticks(d3.timeDay.every(1))
+        .tickFormat(d3.timeFormat("%a"))
+      )
+      .selectAll("text")
+      .style("text-anchor", "middle");
+
+    // Y-axis
+    svg.append("g")
+      .attr("transform", `translate(${marginLeft},0)`)
+      .call(d3.axisLeft(y))
+      .call(g => g.select(".domain").remove())
+      .call(g => g.selectAll(".tick line").clone()
+        .attr("x2", width - marginLeft - marginRight)
+        .attr("stroke-opacity", 0.1));
+
+    // Y-axis label (rotated)
+    svg.append("text")
+      .attr("transform", `rotate(-90)`)
+      .attr("x", -height / 2)
+      .attr("y", 20)
+      .attr("text-anchor", "middle")
+      .attr("fill", "currentColor")
+      .text("Temperature (°F)");
+
+    // Line generators
+    const lineHigh = d3.line()
+      .x(d => x(d.dateObj))
+      .y(d => y(d.high));
+
+    const lineLow = d3.line()
+      .x(d => x(d.dateObj))
+      .y(d => y(d.low));
+
+    // High temperature line
+    svg.append("path")
+      .datum(data)
+      .attr("fill", "none")
+      .attr("stroke", "orangered")
+      .attr("stroke-width", 2)
+      .attr("d", lineHigh);
+
+    // Low temperature line
+    svg.append("path")
+      .datum(data)
+      .attr("fill", "none")
+      .attr("stroke", "steelblue")
+      .attr("stroke-width", 2)
+      .attr("d", lineLow);
+
+    // High temp dots and labels
+    svg.selectAll(".dot-high")
+      .data(data)
+      .enter().append("circle")
+      .attr("class", "dot-high")
+      .attr("cx", d => x(d.dateObj))
+      .attr("cy", d => y(d.high))
+      .attr("r", 4)
+      .attr("fill", "orangered");
+
+    svg.selectAll(".label-high")
+      .data(data)
+      .enter().append("text")
+      .attr("class", "label")
+      .attr("x", d => x(d.dateObj))
+      .attr("y", d => y(d.high) - 10)
+      .attr("text-anchor", "middle")
+      .text(d => d.high);
+
+    // Low temp dots and labels
+    svg.selectAll(".dot-low")
+      .data(data)
+      .enter().append("circle")
+      .attr("class", "dot-low")
+      .attr("cx", d => x(d.dateObj))
+      .attr("cy", d => y(d.low))
+      .attr("r", 4)
+      .attr("fill", "steelblue");
+
+    svg.selectAll(".label-low")
+      .data(data)
+      .enter().append("text")
+      .attr("class", "label")
+      .attr("x", d => x(d.dateObj))
+      .attr("y", d => y(d.low) + 15)
+      .attr("text-anchor", "middle")
+      .text(d => d.low);
+
+    // Add legend
+    const legend = svg.append("g")
+      .attr("class", "legend")
+      .attr("transform", `translate(${width / 2 - 70}, ${height - 35})`);
+
+
+    legend.append("line")
+      .attr("x1", 0)
+      .attr("y1", 0)
+      .attr("x2", 20)
+      .attr("y2", 0)
+      .attr("stroke", "orangered")
+      .attr("stroke-width", 2);
+
+    legend.append("text")
+      .attr("x", 25)
+      .attr("y", 4)
+      .text("High Temperature")
+      .attr("alignment-baseline", "middle");
+
+    legend.append("line")
+      .attr("x1", 0)
+      .attr("y1", 20)
+      .attr("x2", 20)
+      .attr("y2", 20)
+      .attr("stroke", "steelblue")
+      .attr("stroke-width", 2);
+
+    legend.append("text")
+      .attr("x", 25)
+      .attr("y", 24)
+      .text("Low Temperature")
+      .attr("alignment-baseline", "middle");
+
+    // Append to DOM
+    document.getElementById("chart").appendChild(svg.node());
+  </script>
+</body>
+</html>
